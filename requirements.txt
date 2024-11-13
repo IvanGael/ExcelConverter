@@ -1,2 +1,6 @@
+flask
 pandas
+openpyxl
 reportlab
+click
+werkzeug

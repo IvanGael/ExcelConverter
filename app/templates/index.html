@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">Convert Excel File</h2>
+        
+        <form id="convertForm" class="space-y-4">
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">
+                    Choose Excel File
+                </label>
+                <input 
+                    type="file" 
+                    name="file" 
+                    accept=".xlsx,.xls"
+                    class="block w-full text-sm text-gray-500
+                           file:mr-4 file:py-2 file:px-4
+                           file:rounded-md file:border-0
+                           file:text-sm file:font-semibold
+                           file:bg-primary-50 file:text-primary
+                           hover:file:bg-primary-100"
+                    required
+                >
+            </div>
+            
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">
+                    Output Format
+                </label>
+                <select 
+                    name="output_type" 
+                    id="outputType"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 
+                           focus:outline-none focus:ring-primary focus:border-primary 
+                           rounded-md"
+                    required
+                >
+                    <option value="json">JSON</option>
+                    <option value="pdf">PDF</option>
+                </select>
+            </div>
+            
+            <button 
+                type="submit"
+                class="w-full bg-secondary text-white py-2 px-4 rounded-md
+                       hover:bg-secondary focus:outline-none focus:ring-2 
+                       focus:ring-secondary focus:ring-offset-2 transition-colors"
+            >
+                Convert
+            </button>
+        </form>
+        
+        <!-- Result area -->
+        <div id="result" class="mt-6 hidden">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Result:</h3>
+            
+            <!-- JSON Result -->
+            <pre id="jsonResult" class="bg-gray-50 p-4 rounded-md overflow-x-auto hidden"></pre>
+            
+            <!-- PDF Result -->
+            <div id="pdfContainer" class="hidden">
+                <div class="flex justify-between items-center mb-2">
+                    <button 
+                        id="downloadPdf" 
+                        class="bg-primary text-white py-1 px-3 rounded-md
+                               hover:bg-primary focus:outline-none focus:ring-2 
+                               focus:ring-primary focus:ring-offset-2 transition-colors"
+                    >
+                        Download PDF
+                    </button>
+                </div>
+                <iframe 
+                    id="pdfViewer" 
+                    class="w-full h-[600px] border border-gray-300 rounded-md"
+                    style="background-color: #f8f9fa;"
+                ></iframe>
+            </div>
+            
+            <!-- Error Result -->
+            <div id="errorResult" class="text-red-600 hidden"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('convertForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const resultDiv = document.getElementById('result');
+    const jsonResult = document.getElementById('jsonResult');
+    const pdfContainer = document.getElementById('pdfContainer');
+    const pdfViewer = document.getElementById('pdfViewer');
+    const errorResult = document.getElementById('errorResult');
+    const downloadButton = document.getElementById('downloadPdf');
+    
+    try {
+        const response = await fetch('/convert', {
+            method: 'POST',
+            body: formData
+        });
+        
+        resultDiv.classList.remove('hidden');
+        
+        if (formData.get('output_type') === 'pdf') {
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                // Show PDF container and hide JSON result
+                pdfContainer.classList.remove('hidden');
+                jsonResult.classList.add('hidden');
+                errorResult.classList.add('hidden');
+                
+                // Set PDF viewer source
+                pdfViewer.src = url;
+                
+                // Setup download button
+                downloadButton.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'converted.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+            } else {
+                const error = await response.json();
+                throw new Error(error.error);
+            }
+        } else {
+            // Handle JSON result
+            const data = await response.json();
+            if (response.ok) {
+                jsonResult.textContent = JSON.stringify(data, null, 2);
+                jsonResult.classList.remove('hidden');
+                pdfContainer.classList.add('hidden');
+                errorResult.classList.add('hidden');
+            } else {
+                throw new Error(data.error);
+            }
+        }
+    } catch (error) {
+        errorResult.textContent = `Error: ${error.message}`;
+        errorResult.classList.remove('hidden');
+        jsonResult.classList.add('hidden');
+        pdfContainer.classList.add('hidden');
+    }
+});
+
+// Optional: Clear results when changing output type
+document.getElementById('outputType').addEventListener('change', () => {
+    const resultDiv = document.getElementById('result');
+    resultDiv.classList.add('hidden');
+});
+</script>
+{% endblock %}
