@@ -16,7 +16,6 @@ pip install -r requirements.txt
 ```
 
 ## Run
-* web mode (default)
 ```sh
 python app.py
 ```
