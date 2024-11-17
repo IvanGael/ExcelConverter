@@ -9,9 +9,9 @@ def run_web_mode(host='127.0.0.1', port=5000, debug=False):
     app = create_app()
     print(f"Starting web server on {host}:{port}")
     print("Access the application at http://{}:{}".format(host, port))
-    app.run(host=host, port=port, debug=debug)
+    app.run(host=host, port=port, debug=debug, use_reloader=True)
 
-def run_cli_mode(input_file, output_file, output_type):
+def run_cli_mode(input_file, output_file, output_type, pagesize, fontsize, textcolor, backgroundcolor):
     """Run the application in CLI mode"""
     try:
         if not os.path.exists(input_file):
@@ -34,7 +34,7 @@ def run_cli_mode(input_file, output_file, output_type):
             click.echo(f"Successfully converted to JSON: {output_file}")
         
         else:  # PDF output
-            result = ExcelConverter.json_to_pdf(json_data, output_file)
+            result = ExcelConverter.json_to_pdf(json_data, output_file, pagesize=pagesize, fontsize=fontsize, textcolor=textcolor, backgroundcolor=backgroundcolor)
             if result.get('success'):
                 click.echo(f"Successfully converted to PDF: {output_file}")
             else:
@@ -67,7 +67,11 @@ def run_cli_mode(input_file, output_file, output_type):
               type=click.Choice(['json', 'pdf']),
               default='json',
               help='Output type (CLI mode only)')
-def main(mode, host, port, debug, input, output, type):
+@click.option('--pagesize', '-ps', default='A3', help='Page size for PDF output (CLI mode only)')
+@click.option('--fontsize', '-fs', default=10, type=int, help='Font size for PDF output (CLI mode only)')
+@click.option('--textcolor', '-tc', default='#000000', help='Text color for PDF output (CLI mode only)')
+@click.option('--backgroundcolor', '-bc', default='#ffffff', help='Background color for PDF output (CLI mode only)')
+def main(mode, host, port, debug, input, output, type, pagesize, fontsize, textcolor, backgroundcolor):
     """Excel Converter - Convert Excel files to JSON or PDF
     
     Run in web mode:
@@ -82,7 +86,7 @@ def main(mode, host, port, debug, input, output, type):
         if not input or not output:
             click.echo("Error: In CLI mode, both --input and --output are required.", err=True)
             return
-        run_cli_mode(input, output, type)
+        run_cli_mode(input, output, type, pagesize, fontsize, textcolor, backgroundcolor)
 
 if __name__ == '__main__':
     main()

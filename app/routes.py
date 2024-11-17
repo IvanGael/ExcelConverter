@@ -38,7 +38,14 @@ def convert():
         # PDF output
         output_name = os.path.splitext(file.filename)[0] + '.pdf'
         pdf_path = os.path.join(get_base_path(), current_app.config['UPLOAD_FOLDER'], output_name)
-        result = ExcelConverter.json_to_pdf(json_data, pdf_path)
+        
+        # Get customization options
+        pagesize = request.form.get('pagesize', 'A3')
+        fontsize = int(request.form.get('fontsize', 10))
+        textcolor = request.form.get('textcolor', '#000000')
+        backgroundcolor = request.form.get('backgroundcolor', '#ffffff')
+        
+        result = ExcelConverter.json_to_pdf(json_data, pdf_path, pagesize=pagesize, fontsize=fontsize, textcolor=textcolor, backgroundcolor=backgroundcolor)
         
         if result.get('success'):
             return send_file(pdf_path, as_attachment=True)

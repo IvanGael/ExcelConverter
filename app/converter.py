@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import reportlab
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A3
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -21,7 +22,7 @@ class ExcelConverter:
             return {'error': str(e)}
     
     @staticmethod
-    def json_to_pdf(json_data, pdf_output_path='output.pdf', table_header=None, attrs=None):
+    def json_to_pdf(json_data, pdf_output_path='output.pdf', pagesize='A3', fontsize=10, textcolor='#000000', backgroundcolor='#ffffff', table_header=None, attrs=None):
         try:
             data = json.loads(json_data) if isinstance(json_data, str) else json_data
             
@@ -36,7 +37,7 @@ class ExcelConverter:
             
             doc = SimpleDocTemplate(
                 pdf_output_path,
-                pagesize=A3,
+                pagesize=getattr(reportlab.lib.pagesizes, pagesize),
                 rightMargin=30,
                 leftMargin=30,
                 topMargin=30,
@@ -74,16 +75,16 @@ class ExcelConverter:
             
             # Table style
             style = TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(backgroundcolor)),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(textcolor)),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('FONTSIZE', (0, 0), (-1, 0), fontsize),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0f9ff')),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor(backgroundcolor)),
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 10),
+                ('FONTSIZE', (0, 1), (-1, -1), fontsize),
                 ('TOPPADDING', (0, 0), (-1, -1), 6),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                 ('LEFTPADDING', (0, 0), (-1, -1), 6),
